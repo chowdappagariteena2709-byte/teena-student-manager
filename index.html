@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teena Student Manager</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#20242c;--muted:#6f7685;--line:#e6e8ef;--accent:#4f46e5;--good:#138a5b;--warn:#b7791f;--danger:#c53030}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{padding:24px 28px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{margin:0 0 6px;font-size:28px} header p{margin:0;color:var(--muted)}
+nav{display:flex;gap:8px;flex-wrap:wrap;padding:14px 28px;background:var(--card);border-bottom:1px solid var(--line)}
+nav button{border:1px solid var(--line);background:#fff;padding:9px 13px;border-radius:10px;cursor:pointer}
+nav button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+main{max-width:1200px;margin:24px auto;padding:0 20px}
+.view{display:none}.view.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 4px 16px rgba(0,0,0,.04)}
+.card h3{margin:0 0 8px}.big{font-size:30px;font-weight:700}.muted{color:var(--muted)}
+.progress{height:10px;background:#eceef4;border-radius:99px;overflow:hidden;margin-top:10px}.progress>span{display:block;height:100%;background:var(--accent)}
+form{display:grid;gap:10px;margin-top:10px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit}
+button.primary{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:10px;cursor:pointer}
+button.small{padding:6px 9px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer}
+table{width:100%;border-collapse:collapse}.table-wrap{overflow:auto}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+.badge{display:inline-block;padding:4px 8px;border-radius:99px;font-size:12px;font-weight:600}
+.good{background:#e7f7ef;color:var(--good)}.warn{background:#fff4df;color:var(--warn)}.danger{background:#fde8e8;color:var(--danger)}
+.task{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.task:last-child{border-bottom:0}.task.done span{text-decoration:line-through;color:var(--muted)}
+.two{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}@media(max-width:800px){.two{grid-template-columns:1fr}}
+footer{padding:30px;text-align:center;color:var(--muted)}
+.notice{padding:12px;border-radius:10px;background:#eef2ff;margin-top:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎓 Teena Student Manager</h1>
+  <p>Top-rank academics • C/DSA • GitHub • second-year internship preparation</p>
+</header>
+<nav id="nav">
+  <button class="active" data-view="dashboard">Dashboard</button>
+  <button data-view="academics">Academics</button>
+  <button data-view="coding">Coding</button>
+  <button data-view="internship">Internship</button>
+  <button data-view="projects">Projects</button>
+  <button data-view="settings">Settings</button>
+</nav>
+
+<main>
+<section id="dashboard" class="view active">
+  <div class="grid">
+    <div class="card"><h3>Semester progress</h3><div class="big" id="semesterPct">0%</div><div class="progress"><span id="semesterBar" style="width:0%"></span></div></div>
+    <div class="card"><h3>Academic tasks</h3><div class="big" id="pendingAcademic">0</div><div class="muted">pending</div></div>
+    <div class="card"><h3>Coding problems</h3><div class="big" id="problemCount">0</div><div class="muted">logged</div></div>
+    <div class="card"><h3>Internship readiness</h3><div class="big" id="internPct">0%</div><div class="progress"><span id="internBar" style="width:0%"></span></div></div>
+  </div>
+  <div class="two" style="margin-top:16px">
+    <div class="card"><h3>Today</h3><div id="todayList"></div><div class="notice">Priority rule: urgent academics → exams → daily revision → coding → projects → internship prep.</div></div>
+    <div class="card"><h3>Upcoming</h3><div id="upcoming"></div></div>
+  </div>
+</section>
+
+<section id="academics" class="view">
+  <div class="two">
+    <div class="card">
+      <h3>Add academic task</h3>
+      <form id="academicForm">
+        <input id="aTitle" placeholder="e.g. Revise Digital Logic Unit 1" required>
+        <select id="aPriority"><option>High</option><option>Medium</option><option>Low</option></select>
+        <input id="aDue" type="date" required>
+        <button class="primary">Add task</button>
+      </form>
+    </div>
+    <div class="card"><h3>Subject tracker</h3><p class="muted">Add subjects and track progress.</p>
+      <form id="subjectForm"><input id="sName" placeholder="Subject name" required><input id="sPct" type="number" min="0" max="100" placeholder="Progress %" required><button class="primary">Add subject</button></form>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>Academic tasks</h3><div id="academicTasks"></div></div>
+  <div class="card" style="margin-top:16px"><h3>Subjects</h3><div id="subjects"></div></div>
+</section>
+
+<section id="coding" class="view">
+  <div class="two">
+    <div class="card"><h3>Log a coding problem</h3>
+      <form id="codingForm"><input id="cTitle" placeholder="Problem / topic" required><select id="cTopic"><option>C</option><option>Arrays</option><option>Strings</option><option>Pointers</option><option>Recursion</option><option>DSA</option><option>Other</option></select><input id="cDate" type="date" required><button class="primary">Log problem</button></form>
+    </div>
+    <div class="card"><h3>Current coding path</h3><p>C fundamentals → problem solving → DSA → Python → development/specialization</p><div id="codingPath"></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>Practice log</h3><div id="codingLog"></div></div>
+</section>
+
+<section id="internship" class="view">
+  <div class="card">
+    <h3>Internship readiness checklist</h3>
+    <div id="internChecklist"></div>
+  </div>
+</section>
+
+<section id="projects" class="view">
+  <div class="two">
+    <div class="card"><h3>Add a project</h3>
+      <form id="projectForm"><input id="pName" placeholder="Project name" required><input id="pLink" placeholder="GitHub URL (optional)"><select id="pStatus"><option>Idea</option><option>In progress</option><option>Completed</option></select><button class="primary">Add project</button></form>
+    </div>
+    <div class="card"><h3>Project rule</h3><p>Build projects that solve a real problem and can be explained in an interview. Avoid tutorial-copy projects.</p></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>Projects</h3><div id="projectsList"></div></div>
+</section>
+
+<section id="settings" class="view">
+  <div class="card">
+    <h3>Student profile</h3>
+    <form id="settingsForm">
+      <input id="name" placeholder="Your name">
+      <input id="college" placeholder="College / university">
+      <input id="semesterStart" type="date">
+      <input id="semesterEnd" type="date">
+      <button class="primary">Save profile</button>
+    </form>
+    <p class="muted">All data is stored locally in your browser on this device.</p>
+    <button class="small" id="resetBtn">Reset all data</button>
+  </div>
+</section>
+</main>
+<footer>Built as a lightweight local student dashboard. No account or internet connection required.</footer>
+
+<script>
+const KEY="teenaStudentManagerV1";
+const defaultData={
+ profile:{name:"Teena",college:"",semesterStart:"2026-08-23",semesterEnd:"2026-12-31"},
+ academics:[], subjects:[], coding:[], projects:[],
+ intern:[
+  {t:"Strong C fundamentals",d:false},{t:"DSA basics started",d:false},{t:"Git/GitHub workflow",d:true},
+  {t:"At least 1 solid project",d:false},{t:"2+ projects documented",d:false},{t:"Resume ready",d:false},
+  {t:"Interview practice",d:false},{t:"Internship applications started",d:false}
+ ]};
+let data=JSON.parse(localStorage.getItem(KEY)||"null")||defaultData;
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render();}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function daysFromToday(date){const a=new Date(),b=new Date(date);a.setHours(0,0,0,0);b.setHours(0,0,0,0);return Math.round((b-a)/86400000);}
+function badgeFor(due){let n=daysFromToday(due); if(n<0)return '<span class="badge danger">Overdue</span>'; if(n<=3)return '<span class="badge warn">Soon</span>'; return '<span class="badge good">On track</span>'}
+function render(){
+  const doneA=data.academics.filter(x=>x.done).length, totalA=data.academics.length;
+  const sem=totalA?Math.round(doneA/totalA*100):0;
+  document.getElementById("semesterPct").textContent=sem+"%"; document.getElementById("semesterBar").style.width=sem+"%";
+  document.getElementById("pendingAcademic").textContent=data.academics.filter(x=>!x.done).length;
+  document.getElementById("problemCount").textContent=data.coding.length;
+  const intern=Math.round(data.intern.filter(x=>x.d).length/data.intern.length*100);
+  document.getElementById("internPct").textContent=intern+"%"; document.getElementById("internBar").style.width=intern+"%";
+
+  document.getElementById("academicTasks").innerHTML=data.academics.length?data.academics.map((x,i)=>`<div class="task ${x.done?'done':''}"><input type="checkbox" ${x.done?'checked':''} onchange="toggleAcademic(${i})"><span style="flex:1"><b>${esc(x.title)}</b><br><small>${esc(x.priority)} • ${x.due} ${badgeFor(x.due)}</small></span><button class="small" onclick="deleteAcademic(${i})">Delete</button></div>`).join(""):"<p class='muted'>No academic tasks yet.</p>";
+  document.getElementById("subjects").innerHTML=data.subjects.length?data.subjects.map((x,i)=>`<div style="margin:12px 0"><b>${esc(x.name)}</b><span class="muted"> ${x.pct}%</span><div class="progress"><span style="width:${x.pct}%"></span></div></div>`).join(""):"<p class='muted'>No subjects yet.</p>";
+  document.getElementById("codingLog").innerHTML=data.coding.length?data.coding.slice().reverse().map(x=>`<div class="task"><span style="flex:1"><b>${esc(x.title)}</b><br><small>${esc(x.topic)} • ${x.date}</small></span></div>`).join(""):"<p class='muted'>No coding problems logged yet.</p>";
+  document.getElementById("projectsList").innerHTML=data.projects.length?data.projects.map((x,i)=>`<div class="task"><span style="flex:1"><b>${esc(x.name)}</b><br><small>${esc(x.status)} ${x.link?`• <a href="${esc(x.link)}" target="_blank">GitHub</a>`:""}</small></span><button class="small" onclick="deleteProject(${i})">Delete</button></div>`).join(""):"<p class='muted'>No projects yet.</p>";
+  document.getElementById("internChecklist").innerHTML=data.intern.map((x,i)=>`<div class="task ${x.d?'done':''}"><input type="checkbox" ${x.d?'checked':''} onchange="toggleIntern(${i})"><span>${esc(x.t)}</span></div>`).join("");
+  const up=data.academics.filter(x=>!x.done).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,5);
+  document.getElementById("upcoming").innerHTML=up.length?up.map(x=>`<div class="task"><span style="flex:1"><b>${esc(x.title)}</b><br><small>${x.due} ${badgeFor(x.due)}</small></span></div>`).join(""):"<p class='muted'>No upcoming academic tasks.</p>";
+  const today=new Date().toISOString().slice(0,10);
+  const todays=data.academics.filter(x=>!x.done && x.due===today);
+  document.getElementById("todayList").innerHTML=todays.length?todays.map(x=>`<div class="task"><span>${esc(x.title)}</span></div>`).join(""):"<p class='muted'>No tasks due today. Use the time for revision + coding.</p>";
+  document.getElementById("codingPath").innerHTML=["C fundamentals","Problem solving","DSA","Python","Development / specialization"].map((x,i)=>`<div style="padding:7px 0">${i+1}. ${x}</div>`).join("");
+  document.getElementById("name").value=data.profile.name||""; document.getElementById("college").value=data.profile.college||""; document.getElementById("semesterStart").value=data.profile.semesterStart||""; document.getElementById("semesterEnd").value=data.profile.semesterEnd||"";
+}
+function toggleAcademic(i){data.academics[i].done=!data.academics[i].done;save()}
+function deleteAcademic(i){data.academics.splice(i,1);save()}
+function toggleIntern(i){data.intern[i].d=!data.intern[i].d;save()}
+function deleteProject(i){data.projects.splice(i,1);save()}
+document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));document.getElementById(b.dataset.view).classList.add("active")});
+document.getElementById("academicForm").onsubmit=e=>{e.preventDefault();data.academics.push({title:aTitle.value,priority:aPriority.value,due:aDue.value,done:false});e.target.reset();save()};
+document.getElementById("subjectForm").onsubmit=e=>{e.preventDefault();data.subjects.push({name:sName.value,pct:Number(sPct.value)});e.target.reset();save()};
+document.getElementById("codingForm").onsubmit=e=>{e.preventDefault();data.coding.push({title:cTitle.value,topic:cTopic.value,date:cDate.value});e.target.reset();save()};
+document.getElementById("projectForm").onsubmit=e=>{e.preventDefault();data.projects.push({name:pName.value,link:pLink.value,status:pStatus.value});e.target.reset();save()};
+document.getElementById("settingsForm").onsubmit=e=>{e.preventDefault();data.profile={name:name.value,college:college.value,semesterStart:semesterStart.value,semesterEnd:semesterEnd.value};save();alert("Profile saved.")};
+document.getElementById("resetBtn").onclick=()=>{if(confirm("Delete all local data?")){localStorage.removeItem(KEY);data=JSON.parse(JSON.stringify(defaultData));render()}};
+render();
+</script>
+</body>
+</html>
